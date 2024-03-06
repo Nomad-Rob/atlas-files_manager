@@ -41,14 +41,14 @@ RUN apt-get -y install redis-server
 RUN sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf
 
 RUN mkdir /tmp/node_packages
-COPY package.json /tmp/node_packages/package.json
+# COPY package.json /tmp/node_packages/package.json
 RUN cd /tmp/node_packages && npm install
 
 # Create test user
 RUN useradd -M correction_tester
 
-
-
+# Keep the container running indef 
+CMD ["tail", "-f", "/dev/null"]
 
 
 
