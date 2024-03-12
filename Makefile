@@ -1,8 +1,8 @@
 # Variables
-DOCKER_IMAGE_NAME = atlas_files_manager
-DOCKER_CONTAINER_NAME = atlas_files_manager_container
+DOCKER_IMAGE_NAME = atlas-files_manager
+DOCKER_CONTAINER_NAME = atlas-files_manager_container
 HOST_DIRECTORY=./
-CONTAINER_DIRECTORY=/atlas_files_manager
+CONTAINER_DIRECTORY=/atlas-files_manager
 .PHONY: build run exec stop clean
 
 
