@@ -22,14 +22,17 @@ class RedisClient {
   isAlive() {
     return this.client.connected;
   }
+
   // Get the value of a key from the Redis instance
   async get(key) {
     return this.getAsync(key);
   }
+
   // Set the value of a key in the Redis instance
   async set(key, value, duration) {
     return this.setAsync(key, value, 'EX', duration);
   }
+
   // Delete a key from the Redis instance
   async del(key) {
     return this.delAsync(key);
