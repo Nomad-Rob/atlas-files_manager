@@ -1,13 +1,10 @@
 // Setting up the Express Server
 
-const express = require('express');
+import express from 'express';
+import routes from './routes/index.js';
+
 const app = express();
-
-// Listen on port set by env variable or 5000
 const port = process.env.PORT || 5000;
-
-// Load all routes from the routes folder
-const routes = require('./routes/index');
 
 app.use(routes);
 

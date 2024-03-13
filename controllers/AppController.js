@@ -1,6 +1,6 @@
 // Controller for app
-const redisClient = require('../utils/redis').default;
-const dbClient = require('../utils/db').default;
+import redisClient from '../utils/redis.js';
+import dbClient from '../utils/db.js';
 
 // AppController class
 class AppController {

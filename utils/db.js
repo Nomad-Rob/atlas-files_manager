@@ -32,12 +32,18 @@ class DBClient {
 
   // Getting number of users
   async nbUsers() {
-    return this.db.collection('users').countDocuments();
+    if (this.db) {
+      return this.db.collection('users').countDocuments();
+    }
+    throw new Error("DB is not initialized.");
   }
 
   // Get the number of files
   async nbFiles() {
-    return this.db.collection('files').countDocuments();
+    if (this.db) {
+      return this.db.collection('files').countDocuments();
+    }
+    throw new Error("DB is not initialized.");
   }
 }
 
