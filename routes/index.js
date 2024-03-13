@@ -13,5 +13,4 @@ router.get('/stats', AppController.getStats);
 // Post Routes
 router.post('/users', UsersController.postNew);
 
-
 module.exports = router;
