@@ -18,15 +18,11 @@ const AuthController = {
     // Extracting the Base64 encoded credentials from the Authorization header
     const encodedCredentials = authHeader.slice('Basic '.length);
     const credentials = Buffer.from(encodedCredentials, 'base64').toString();
-    const parts = credentials.split(':');
+    const [email, password] = credentials.split(':');
 
-    // Checking if the decoded credentials follow the "email:password" format
-    if (parts.length !== 2) {
+    if (!email || !password) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-
-    // Extracting email and password from the decoded credentials
-    const [email, password] = parts;
 
     // Hashing the password
     const hashedPassword = sha1(password);
