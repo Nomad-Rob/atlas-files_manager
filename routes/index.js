@@ -3,6 +3,7 @@ import { Router } from 'express';
 import AppController from '../controllers/AppController';
 import UsersController from '../controllers/UsersController';
 import AuthController from '../controllers/AuthController';
+import { FilesController } from '../controllers/FilesController.js';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.get('/users/me', UsersController.getMe);
 
 // Post Routes
 router.post('/users', UsersController.postNew);
+router.post('/files', FilesController.postUpload);
 
 module.exports = router;
