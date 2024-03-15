@@ -30,12 +30,42 @@ class UsersController {
       email,
       password: hashedPassword,
     });
+    
+        // Return the new user's email and id
+        return res.status(201).json({
+          id: newUser.insertedId,
+          email
+        });
+  }
+    
+  // Retrieve the user base on the token
+  static async getMe(req, res) {
+    const token = req.headers['x-token'];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-    // Return the new user's email and id
-    return res.status(201).json({
-      id: newUser.insertedId,
-      email,
-    });
+    try {
+      // Get user ID string associated w/ token from Redis
+      const userIdString = await RedisClient.get(`auth_${token}`);
+      if (!userIdString) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Convert user ID string to MongoDB's ObjectID
+      const userId = new ObjectID(userIdString);
+      // Find user by ID from db
+      const user = await dbClient.users.findOne({ _id: userId });
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Return users ID and email, converting it from ObjectID to string for response
+      return res.status(200).json({ id: user._id.toString(), email: user.email });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 }
 
