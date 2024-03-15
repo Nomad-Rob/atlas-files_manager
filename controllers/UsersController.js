@@ -1,4 +1,5 @@
 // User Controllers for the application
+import redisClient from '../utils/redis';
 import crypto from 'crypto';
 import dbClient from '../utils/db';
 // import crypto for password hashing
