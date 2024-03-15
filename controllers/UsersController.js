@@ -41,16 +41,20 @@ class UsersController {
   static async getMe(req, res) {
     // Extract token from request headers
     const token = req.headers['x-token'];
+    console.log("Token for getMe is:", token);
 
     // Check if token is present
     if (!token) {
+      console.log("Token not valid or undefined");
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
       // Retrieve user from Redis cache based on token
       const userId = await redisClient.get(`auth_${token}`);
+      console.log("userId from redisClient is:", userId);
       if (!userId) {
+        console.log("No userId or invalid");
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
