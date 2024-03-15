@@ -1,4 +1,5 @@
 // Task 0 - Creating Redis Client
+import { resolve } from 'path';
 import redis from 'redis';
 import { promisify } from 'util';
 
@@ -6,12 +7,18 @@ import { promisify } from 'util';
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
-    this.client.on('error', (error) => console.error(`Redis client not connected: ${error}`));
+    this.connected = true;
+    this.client.on('error', (error) => {console.error(`Redis client not connected: ${error}`)});
+    this.client.on('connect', () => {
+      resolve();
+      // return this.isAlive();
+    })
   }
 
   // Check if the connection is alive
   isAlive() {
-    return this.client.connected;
+    // console.log("The client is connected, true or false?:", this.client.connected);
+    return this.connected;
   }
 
   // Get value from key
