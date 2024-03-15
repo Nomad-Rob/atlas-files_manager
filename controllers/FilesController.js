@@ -16,14 +16,16 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { name, type, parentId = '0', isPublic = false, data } = req.body;
+    const {
+      name, type, parentId = '0', isPublic = false, data,
+    } = req.body;
     if (!name) {
       console.log('Missing name');
       return res.status(400).json({ error: 'Missing name' });
     }
     if (!type || !['folder', 'file', 'image'].includes(type)) {
-      console.log('Missing or invalid type');
-      return res.status(400).json({ error: 'Missing or invalid type' });
+      console.log('Missing type');
+      return res.status(400).json({ error: 'Missing type' });
     }
     if (!data && type !== 'folder') {
       console.log('Missing data');
@@ -75,7 +77,7 @@ class FilesController {
       type: fileData.type,
       isPublic: fileData.isPublic,
       parentId: fileData.parentId,
-      ...(type !== 'folder' && { localPath: fileData.localPath })
+      ...(type !== 'folder' && { localPath: fileData.localPath }),
     });
   }
 }
