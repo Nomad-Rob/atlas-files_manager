@@ -45,6 +45,17 @@ class DBClient {
     }
     throw new Error("DB is not initialized.");
   }
+
+  // Find the user and return it
+  async findUser(filter) {
+    try {
+      const user = await this.db.collection('users').findOne(filter);
+      return user;
+    } catch (error) {
+      console.error('Error finding user:', error);
+      throw new Error("Failed to find user in database.");
+    }
+  }
 }
 
 // Export an instance of DBClient
