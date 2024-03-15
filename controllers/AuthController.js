@@ -1,13 +1,15 @@
 // Controller for authentication
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+import sha1 from 'sha1';
 import crypto from 'crypto'; // cryptographic functionality that includes a set of wrappers
 import { v4 as uuidv4 } from 'uuid'; // generate unique id
 
 // AuthController class
 const AuthController = {
   getConnect: async (req, res) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.header('Authorization');
+    console.log(authHeader);
 
     // Making sure the header is there
     if (!authHeader) {
@@ -15,24 +17,27 @@ const AuthController = {
     }
 
     // Getting the email and password from the header and making sure it's in the right format
-    const base64Credentials = authHeader.split(' ')[1];
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const encodedCredentials = authHeader.slice('Basic '.length);
+    const credentials = Buffer.from(encodedCredentials, 'base64').toString();
     const [email, password] = credentials.split(':');
 
     // Hashing the password
-    const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
+    const hashedPassword = sha1(password);
     try {
-      const user = await User.findOne({ email: email, password: hashedPassword });
+      // console.log('about to get the user');
+      const user = await dbClient.findUser({ email: email, password: hashedPassword });
+      // console.log('the user is:', user);
       if (!user) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
       // Generating a token
       const token = uuidv4();
-      await redisClient.set(`auth_${token}`, user.id, 'EX', 24 * 60 * 60); // set token valid for 24 hours
+      await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60); // set token valid for 24 hours
 
-      res.status(200).json({ token });
+      return res.status(200).json({ token });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Internal server error" });
     }
   },
