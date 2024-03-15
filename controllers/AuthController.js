@@ -1,9 +1,8 @@
 // Controller for authentication
-import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
 import sha1 from 'sha1';
-import crypto from 'crypto'; // cryptographic functionality that includes a set of wrappers
 import { v4 as uuidv4 } from 'uuid'; // generate unique id
+import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 // AuthController class
 const AuthController = {
@@ -13,22 +12,31 @@ const AuthController = {
 
     // Making sure the header is there
     if (!authHeader) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Getting the email and password from the header and making sure it's in the right format
+    // Extracting the Base64 encoded credentials from the Authorization header
     const encodedCredentials = authHeader.slice('Basic '.length);
     const credentials = Buffer.from(encodedCredentials, 'base64').toString();
-    const [email, password] = credentials.split(':');
+    const parts = credentials.split(':');
+
+    // Checking if the decoded credentials follow the "email:password" format
+    if (parts.length !== 2) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Extracting email and password from the decoded credentials
+    const [email, password] = parts;
 
     // Hashing the password
     const hashedPassword = sha1(password);
+
     try {
       // console.log('about to get the user');
-      const user = await dbClient.findUser({ email: email, password: hashedPassword });
+      const user = await dbClient.findUser({ email, password: hashedPassword });
       // console.log('the user is:', user);
       if (!user) {
-        return res.status(401).json({ error: "Unauthorized" });
+        return res.status(401).json({ error: 'Unauthorized' });
       }
 
       // Generating a token
@@ -38,31 +46,28 @@ const AuthController = {
       return res.status(200).json({ token });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   },
-  
+
   // Getting disconnect
   getDisconnect: async (req, res) => {
-    // Getting the token from the header
     const token = req.headers['x-token'];
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
-      // Deleting the token from the redis database
       const reply = await redisClient.del(`auth_${token}`);
-      if (reply === 0) { // token not found
-        return res.status(401).json({ error: "Unauthorized" });
+      if (reply === 0) {
+        return res.status(401).json({ error: 'Unauthorized' });
       }
-      res.status(204).send(); // Successfully deleted
+      return res.status(204).send(); // Adjusted with return
     } catch (error) {
-      res.status(500).json({ error: "Internal server error" });
+      console.error(error);
+      return res.status(500).json({ error: 'Internal server error' }); // Adjusted with return
     }
-  }
+  },
 };
 
 module.exports = AuthController;
-
-

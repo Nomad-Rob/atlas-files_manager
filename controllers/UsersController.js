@@ -1,8 +1,8 @@
 // User Controllers for the application
-import redisClient from '../utils/redis';
 import crypto from 'crypto';
-import dbClient from '../utils/db';
 import { ObjectId } from 'mongodb';
+import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 // import crypto for password hashing
 
 class UsersController {
@@ -31,39 +31,39 @@ class UsersController {
       email,
       password: hashedPassword,
     });
-    
-        // Return the new user's email and id
-        return res.status(201).json({
-          id: newUser.insertedId,
-          email
-        });
+
+    // Return the new user's email and id
+    return res.status(201).json({
+      id: newUser.insertedId,
+      email,
+    });
   }
-    
+
   // Retrieve the user base on the token
   static async getMe(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
-      console.log("Token not valid or undefined");
+      console.log('Token not valid or undefined');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
       // Retrieve user from Redis cache based on token
       const userId = await redisClient.get(`auth_${token}`);
-      console.log("userId from redisClient is:", userId);
+      console.log('userId from redisClient is:', userId);
       if (!userId) {
-        console.log("No userId or invalid");
+        console.log('No userId or invalid');
         return res.status(401).json({ error: 'Unauthorized' });
       }
-    
+
       // Retrieve user details from the database
       const user = await dbClient.db.collection('users').findOne({ _id: new ObjectId(userId) });
-    
+
       if (!user) {
-        console.log("User not found in the database");
+        console.log('User not found in the database');
         return res.status(401).json({ error: 'Unauthorized' });
       }
-    
+
       // Return user email and id
       return res.status(200).json({ email: user.email, id: user._id });
     } catch (error) {
