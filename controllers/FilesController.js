@@ -132,6 +132,7 @@ class FilesController {
 
       const files = await dbClient.db.collection('files')
         .find(query)
+        .sort({ _id: 1 }) // Trying to have a consistent order
         .limit(perPage)
         .skip(skipAmount)
         .toArray();
