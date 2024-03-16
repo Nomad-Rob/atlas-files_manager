@@ -7,7 +7,7 @@ import redisClient from '../utils/redis';
 
 class FilesController {
   static async postUpload(req, res) {
-    // Your existing postUpload method seems correct and is not mentioned in the failing tests.
+
   }
 
   static async getShow(req, res) {
@@ -20,19 +20,23 @@ class FilesController {
     const { id } = req.params;
 
     try {
-      const file = await dbClient.db.collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
+      const file = await dbClient.db.collection('files').findOne({
+        _id: new ObjectId(id),
+        userId: new ObjectId(userId)
+      });
       if (!file) {
         return res.status(404).json({ error: 'Not found' });
       }
       return res.json({
-        id: file._id,
-        userId: file.userId,
+        id: file._id.toString(), // Ensure ID is stringified
+        userId: file.userId.toString(), // Ensure userId is stringified
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId,
+        parentId: file.parentId.toString(), // Ensure parentId is stringified or handled appropriately if "0"
       });
     } catch (error) {
+      console.error('Error retrieving file:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
@@ -44,18 +48,14 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { parentId = '0', page = 0 } = req.query;
+    const { parentId = '0', page = '0' } = req.query;
     const perPage = 20;
     const skip = parseInt(page, 10) * perPage;
 
-    if (parentId !== '0' && !ObjectId.isValid(parentId)) {
-      return res.status(400).json({ error: 'Invalid parentId' });
-    }
-
     try {
-      const query = { 
-        userId: new ObjectId(userId), 
-        parentId: parentId !== '0' ? new ObjectId(parentId) : 0 
+      const query = {
+        userId: new ObjectId(userId),
+        parentId: parentId !== '0' ? new ObjectId(parentId) : 0,
       };
 
       const files = await dbClient.db.collection('files')
@@ -65,14 +65,15 @@ class FilesController {
         .toArray();
 
       return res.json(files.map(file => ({
-        id: file._id,
-        userId: file.userId,
+        id: file._id.toString(), // Ensure ID is stringified
+        userId: file.userId.toString(), // Ensure userId is stringified
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId,
+        parentId: file.parentId.toString(), // Handle "0" parentId and ensure stringified
       })));
     } catch (error) {
+      console.error('Error retrieving files:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
