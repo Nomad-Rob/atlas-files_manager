@@ -96,14 +96,15 @@ class FilesController {
       if (!file) {
         return res.status(404).json({ error: 'Not found' });
       }
+
+      // Simplified return statement
       return res.json({
-        id: file._id.toString(), // Ensure ID is stringified
-        userId: file.userId.toString(), // Ensure userId is stringified
+        id: file._id.toString(),
+        userId: file.userId.toString(),
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId.toString(), // Ensure parentId is stringified
-        // or handled appropriately if "0"
+        parentId: file.parentId.toString(), // Handle "0" gracefully
       });
     } catch (error) {
       console.error('Error retrieving file:', error);
@@ -115,35 +116,38 @@ class FilesController {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
-      console.log('No userId or invalid');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const { parentId = '0', page = 0 } = req.query;
     const perPage = 20;
-    const skip = page * perPage;
+    const skip = parseInt(page) * perPage;
 
-    // Validate parentId
-    if (parentId !== '0' && !ObjectId.isValid(parentId)) {
-      console.log('Invalid parentId');
-      return res.status(400).json({ error: 'Invalid parentId' });
-    }
-
+    // Correct handling for parentId and pagination
     try {
       let query = { userId: new ObjectId(userId) };
       if (parentId !== '0') {
-          query.parentId = new ObjectId(parentId);
+        query.parentId = new ObjectId(parentId);
       } else {
-          // Handle case when parentId is not provided
-          query.parentId = 0;
+        // Correct handling when parentId is "0"
+        query.parentId = 0;
       }
 
       const files = await dbClient.db.collection('files')
-        .find({ userId: new ObjectId(userId), parentId: parentId !== '0' ? new ObjectId(parentId) : 0 })
+        .find(query)
         .limit(perPage)
         .skip(skip)
         .toArray();
-      return res.json(files);
+
+      // Correctly return the list of files
+      return res.json(files.map(file => ({
+        id: file._id.toString(),
+        userId: file.userId.toString(),
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: file.parentId.toString(), // Correctly handle "0" and other parentIds
+      })));
     } catch (error) {
       console.error('Error retrieving files:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
