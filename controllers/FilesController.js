@@ -55,7 +55,8 @@ class FilesController {
     try {
       const query = {
         userId: new ObjectId(userId),
-        parentId: parentId !== '0' ? new ObjectId(parentId) : 0,
+        // Adjust the query to handle '0' as a special case for parentId
+        parentId: parentId !== '0' ? new ObjectId(parentId) : '0',
       };
 
       const files = await dbClient.db.collection('files')
@@ -70,7 +71,8 @@ class FilesController {
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId.toString(), // Handle "0" parentId and ensure stringified
+        // Ensure parentId is '0' or stringified ObjectId, handling nulls or undefined correctly
+        parentId: file.parentId ? file.parentId.toString() : '0',
       })));
     } catch (error) {
       console.error('Error retrieving files:', error);
