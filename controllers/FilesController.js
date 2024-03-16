@@ -116,6 +116,7 @@ class FilesController {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
+      console.log('No userId or invalid');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -139,12 +140,14 @@ class FilesController {
       // This should help with pagination
       const files = await dbClient.db.collection('files')
         .find(query)
+        .match({ parentId: new ObjectId(parentId) })
         .sort({ _id: 1 }) // Ensure consistent ordering
         .limit(perPage)
         .skip(skipAmount)
         .toArray();
 
       // Respond with the correctly formatted file objects
+      console.log('files:', files);
       return res.json(files.map((file) => ({
         id: file._id.toString(),
         userId: file.userId.toString(),
