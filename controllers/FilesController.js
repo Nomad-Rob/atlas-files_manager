@@ -115,35 +115,35 @@ class FilesController {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
+      console.log('No userId or invalid');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { parentId = '0', page = '0' } = req.query;
+    const { parentId = '0', page = 0 } = req.query;
     const perPage = 20;
-    const skip = parseInt(page, 10) * perPage;
+    const skip = page * perPage;
+
+    // Validate parentId
+    if (parentId !== '0' && !ObjectId.isValid(parentId)) {
+      console.log('Invalid parentId');
+      return res.status(400).json({ error: 'Invalid parentId' });
+    }
 
     try {
-      const query = {
-        userId: new ObjectId(userId),
-        // Adjust the query to handle '0' as a special case for parentId
-        parentId: parentId !== '0' ? new ObjectId(parentId) : '0',
-      };
+      let query = { userId: new ObjectId(userId) };
+      if (parentId !== '0') {
+          query.parentId = new ObjectId(parentId);
+      } else {
+          // Handle case when parentId is not provided
+          query.parentId = 0;
+      }
 
       const files = await dbClient.db.collection('files')
-        .find(query)
+        .find({ userId: new ObjectId(userId), parentId: parentId !== '0' ? new ObjectId(parentId) : 0 })
         .limit(perPage)
         .skip(skip)
         .toArray();
-
-      return res.json(files.map((file) => ({
-        id: file._id.toString(), // Ensure ID is stringified
-        userId: file.userId.toString(), // Ensure userId is stringified
-        name: file.name,
-        type: file.type,
-        isPublic: file.isPublic,
-        // Ensure parentId is '0' or stringified ObjectId, handling nulls or undefined correctly
-        parentId: file.parentId ? file.parentId.toString() : '0',
-      })));
+      return res.json(files);
     } catch (error) {
       console.error('Error retrieving files:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
