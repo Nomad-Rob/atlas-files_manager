@@ -119,35 +119,31 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Ensure string parameters are correctly handled
-    let { parentId = '0', page = '0' } = req.query;
-    parentId = String(parentId); // Convert parentId to string
-    page = parseInt(page, 10); // Parse page as an integer
+    // Convert page query param to integer with a default of 0 if undefined
+    const page = parseInt(req.query.page || '0', 10);
+    const parentId = req.query.parentId || '0'; // Changed to 'const' as it is not reassigned
 
     const perPage = 20;
-    const skip = page * perPage;
+    const skipAmount = page * perPage;
 
     try {
-      // Construct the query with dynamic parentId
-      const query = { userId: new ObjectId(userId) };
-      // Adjust for parentId: when '0', treat as root, otherwise, ensure ObjectId
-      query.parentId = parentId !== '0' ? new ObjectId(parentId) : 0;
+      // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
+      const query = { userId: new ObjectId(userId), parentId: parentId === '0' ? 0 : new ObjectId(parentId) };
 
-      // Fetch files with pagination
       const files = await dbClient.db.collection('files')
         .find(query)
         .limit(perPage)
-        .skip(skip)
+        .skip(skipAmount)
         .toArray();
 
-      // Map the files for the response
+      // Prepare files for the response
       const response = files.map((file) => ({
         id: file._id.toString(),
         userId: file.userId.toString(),
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId.toString(), // Handle parentId correctly
+        parentId: file.parentId.toString(),
       }));
 
       return res.json(response);
