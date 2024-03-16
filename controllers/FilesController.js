@@ -152,5 +152,76 @@ class FilesController {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+  
+  static async putPublish(req, res) {
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      console.log('No userId or invalid');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { id } = req.params;
+      const result = await dbClient.db.collection('files').findOneAndUpdate(
+        { _id: new ObjectId(id), userId: new ObjectId(userId) },
+        { $set: { isPublic: true } },
+        { returnDocument: 'after' }
+      );
+
+      if (!result.value) {
+        console.log('File not found');
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      return res.status(200).json({
+        id: result.value._id.toString(),
+        userId: result.value.userId.toString(),
+        name: result.value.name,
+        type: result.value.type,
+        isPublic: result.value.isPublic,
+        parentId: result.value.parentId.toString(),
+      });
+    } catch (error) {
+      console.error('Error publishing file:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async putUnpublish(req, res) {
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      console.log('No userId or invalid');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { id } = req.params;
+      const result = await dbClient.db.collection('files').findOneAndUpdate(
+        { _id: new ObjectId(id), userId: new ObjectId(userId) },
+        { $set: { isPublic: false } },
+        { returnDocument: 'after' }
+      );
+
+      if (!result.value) {
+        console.log('File not found');
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      return res.status(200).json({
+        id: result.value._id.toString(),
+        userId: result.value.userId.toString(),
+        name: result.value.name,
+        type: result.value.type,
+        isPublic: result.value.isPublic,
+        parentId: result.value.parentId.toString(),
+      });
+    } catch (error) {
+      console.error('Error unpublishing file:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+  
 }
 export default FilesController;
