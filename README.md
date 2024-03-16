@@ -65,3 +65,6 @@ Task 7: File publish/unpublish
 - Route PUT /files/:id/unpublish with correct :id of the owner - file already published yet
 
 Task 8: File data
+- Eslinter issue with return valuse at the end of the static asyn method getFile. Will try and fix later
+
+Task 9: Image Thumbnails
