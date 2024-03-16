@@ -119,40 +119,42 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { parentId = '0', page = 0 } = req.query;
+    // Ensure string parameters are correctly handled
+    let { parentId = '0', page = '0' } = req.query;
+    parentId = String(parentId); // Convert parentId to string
+    page = parseInt(page, 10); // Parse page as an integer
+
     const perPage = 20;
-    const skip = parseInt(page) * perPage;
+    const skip = page * perPage;
 
-    // Correct handling for parentId and pagination
     try {
-      let query = { userId: new ObjectId(userId) };
-      if (parentId !== '0') {
-        query.parentId = new ObjectId(parentId);
-      } else {
-        // Correct handling when parentId is "0"
-        query.parentId = 0;
-      }
+      // Construct the query with dynamic parentId
+      const query = { userId: new ObjectId(userId) };
+      // Adjust for parentId: when '0', treat as root, otherwise, ensure ObjectId
+      query.parentId = parentId !== '0' ? new ObjectId(parentId) : 0;
 
+      // Fetch files with pagination
       const files = await dbClient.db.collection('files')
         .find(query)
         .limit(perPage)
         .skip(skip)
         .toArray();
 
-      // Correctly return the list of files
-      return res.json(files.map(file => ({
+      // Map the files for the response
+      const response = files.map((file) => ({
         id: file._id.toString(),
         userId: file.userId.toString(),
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId.toString(), // Correctly handle "0" and other parentIds
-      })));
+        parentId: file.parentId.toString(), // Handle parentId correctly
+      }));
+
+      return res.json(response);
     } catch (error) {
-      console.error('Error retrieving files:', error);
+      console.error('Error in getIndex:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
 }
-
 export default FilesController;
