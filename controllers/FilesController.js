@@ -1,14 +1,14 @@
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
+// import { v4 as uuidv4 } from 'uuid';
+// import fs from 'fs';
+// import path from 'path';
 import { ObjectId } from 'mongodb';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
 class FilesController {
-  static async postUpload(req, res) {
+  // static async postUpload(req, res) {
 
-  }
+  // }
 
   static async getShow(req, res) {
     const token = req.headers['x-token'];
@@ -22,7 +22,7 @@ class FilesController {
     try {
       const file = await dbClient.db.collection('files').findOne({
         _id: new ObjectId(id),
-        userId: new ObjectId(userId)
+        userId: new ObjectId(userId),
       });
       if (!file) {
         return res.status(404).json({ error: 'Not found' });
@@ -33,7 +33,8 @@ class FilesController {
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
-        parentId: file.parentId.toString(), // Ensure parentId is stringified or handled appropriately if "0"
+        parentId: file.parentId.toString(), // Ensure parentId is stringified
+        // or handled appropriately if "0"
       });
     } catch (error) {
       console.error('Error retrieving file:', error);
@@ -65,7 +66,7 @@ class FilesController {
         .skip(skip)
         .toArray();
 
-      return res.json(files.map(file => ({
+      return res.json(files.map((file) => ({
         id: file._id.toString(), // Ensure ID is stringified
         userId: file.userId.toString(), // Ensure userId is stringified
         name: file.name,
