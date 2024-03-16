@@ -116,48 +116,39 @@ class FilesController {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
-      console.log('No userId or invalid');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Correctly interpret the page number, defaulting to 0 if undefined
+    // Convert page query param to integer with a default of 0 if undefined
     const page = parseInt(req.query.page || '0', 10);
-    const parentId = req.query.parentId || '0';
+    const parentId = req.query.parentId || '0'; // Changed to 'const' as it is not reassigned
 
     const perPage = 20;
     const skipAmount = page * perPage;
 
     try {
-      const query = { userId: new ObjectId(userId) };
-      // Adjust for root ('0') parentId or specific parentId
-      if (parentId !== '0') {
-        query.parentId = new ObjectId(parentId);
-      } else {
-        query.parentId = 0; // Root items
-      }
+      // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
+      const query = { userId: new ObjectId(userId), parentId: parentId === '0' ? 0 : new ObjectId(parentId) };
 
-      // Add sorting by _id to ensure consistent order
-      // This should help with pagination
       const files = await dbClient.db.collection('files')
         .find(query)
-        .match({ parentId: new ObjectId(parentId) })
-        .sort({ _id: 1 }) // Ensure consistent ordering
         .limit(perPage)
         .skip(skipAmount)
         .toArray();
 
-      // Respond with the correctly formatted file objects
-      console.log('files:', files);
-      return res.json(files.map((file) => ({
+      // Prepare files for the response
+      const response = files.map((file) => ({
         id: file._id.toString(),
         userId: file.userId.toString(),
         name: file.name,
         type: file.type,
         isPublic: file.isPublic,
         parentId: file.parentId.toString(),
-      })));
+      }));
+
+      return res.json(response);
     } catch (error) {
-      console.error('Error retrieving files:', error);
+      console.error('Error in getIndex:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
