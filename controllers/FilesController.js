@@ -133,7 +133,7 @@ class FilesController {
       console.error('Error retrieving files:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+  }
 }
 
 export default FilesController;
