@@ -123,6 +123,14 @@ class FilesController {
     }
 
     try {
+      let query = { userId: new ObjectId(userId) };
+      if (parentId !== '0') {
+          query.parentId = new ObjectId(parentId);
+      } else {
+          // Handle case when parentId is not provided
+          query.parentId = 0;
+      }
+
       const files = await dbClient.db.collection('files')
         .find({ userId: new ObjectId(userId), parentId: parentId !== '0' ? new ObjectId(parentId) : 0 })
         .limit(perPage)
