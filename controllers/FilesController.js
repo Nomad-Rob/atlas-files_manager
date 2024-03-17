@@ -266,7 +266,7 @@ class FilesController {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-    return res.status(500).json({ error: 'Internal Server Error: End of getFile() no result' });
+    // return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 export default FilesController;
