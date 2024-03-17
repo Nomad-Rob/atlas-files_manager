@@ -3,9 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types'; // Added to handle MIME types
-// import Queue from 'bull';
+import Queue from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import { imageThumbnail } from 'image-thumbnail';
+
+// Initialize Bull queue
+const fileQueue = new Queue('file processing');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -65,6 +69,14 @@ class FilesController {
       fs.writeFileSync(filePath, fileBuffer);
 
       fileData.localPath = filePath;
+
+      // Add job to Bull queue for generating thumbnail
+      if (type === 'image') {
+        fileQueue.add({
+          userId: userId,
+          fileId: new ObjectId(),
+        });
+      }
     }
 
     const newFile = await dbClient.db.collection('files').insertOne(fileData);
@@ -266,15 +278,29 @@ class FilesController {
         return res.status(400).json({ error: "A folder doesn't have content" });
       }
 
-      // Check if the file is locally present
-      if (!fs.existsSync(file.localPath)) {
+      // Get MIME type
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+
+      // Check for size query parameter
+      const { size } = req.query;
+      if (size && !['500', '250', '100'].includes(size)) {
+        return res.status(400).json({ error: 'Invalid size parameter. Must be one of: 500, 250, 100' });
+      }
+
+      // Get the correct local file based on size
+      let localFilePath = file.localPath;
+      if (size) {
+        localFilePath = file.localPath.replace(/\.[^/.]+$/, `_${size}$&`);
+      }
+
+      // If the local file doesn’t exist, return an error Not found with a status code 404
+      if (!fs.existsSync(localFilePath)) {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      // Get MIME type and serve file content
-      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      // Serve file content
       res.type(mimeType);
-      fs.createReadStream(file.localPath).pipe(res);
+      fs.createReadStream(localFilePath).pipe(res);
       return res;
     } catch (error) {
       console.error('Error serving file content:', error);

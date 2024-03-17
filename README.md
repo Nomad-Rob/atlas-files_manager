@@ -56,12 +56,10 @@ FOLDER_PATH=/path/to/your/storage
 
 ## Some checks we are failing
 
-Task 6: Get and list file
-- Route GET /files with no parentId and no page
-- Route GET /files with no parentId and second page
-
 Task 7: File publish/unpublish
 - Route PUT /files/:id/publish with correct :id of the owner - file not published yet
 - Route PUT /files/:id/unpublish with correct :id of the owner - file already published yet
 
 Task 9: Image Thumbnails
+- got file manager to create new job and save to output, need to fix
+resizing of files to 100, 250, 500
