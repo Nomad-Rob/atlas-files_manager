@@ -18,7 +18,10 @@ class RedisClient {
   // Check if the connection is alive
   isAlive() {
     // console.log("The client is connected, true or false?:", this.client.connected);
-    return this.client.connected;
+    if (!this.client.connected) {
+      return false;
+    }
+    return true;
   }
 
   // Get value from key
