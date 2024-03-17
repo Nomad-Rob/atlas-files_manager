@@ -123,7 +123,15 @@ class FilesController {
 
     // Convert page query param to integer with a default of 0 if undefined
     const page = parseInt(req.query.page || '0', 10);
-    const parentId = req.query.parentId || '0'; // Changed to 'const' as it is not reassigned
+    console.log(req.query);
+    let parentId;
+    if (!req.query.parentId) {
+      parentId = '0';
+    }
+    else {
+      parentId = req.query.parentId;
+    }
+    console.log(parentId);
 
     const perPage = 20;
     const skipAmount = page * perPage;
@@ -131,7 +139,13 @@ class FilesController {
 
     try {
       // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
-      const query = { userId: new ObjectId(userId), parentId };
+      let query;
+      if (parentId == '0'){
+        query = { userId: new ObjectId(userId), parentId };
+      }
+      else {
+        query = { userId: new ObjectId(userId), parentId: new ObjectId(parentId) };
+      }
 
       const files = await dbClient.db.collection('files')
         .find(query)

@@ -93,17 +93,17 @@ describe('GET /files', () => {
         fctRemoveAllRedisKeys();
     });
 
-    it('GET /files with no parentId and no page', (done) => {
+    it('GET /files with no parentId and second page', (done) => {
         chai.request('http://localhost:5000')
             .get(`/files`)
+            .query({ page: 1 })
             .set('X-Token', initialUserToken)
             .end(async (err, res) => {
                 chai.expect(err).to.be.null;
                 chai.expect(res).to.have.status(200);
 
                 const resList = res.body;
-                console.log(resList);
-                chai.expect(resList.length).to.equal(20);
+                chai.expect(resList.length).to.equal(5);
                 
                 resList.forEach((item) => {
                     const itemIdx = initialFiles.findIndex((i) => i.id == item.id);
@@ -118,7 +118,7 @@ describe('GET /files', () => {
                     chai.expect(itemInit.parentId).to.equal(item.parentId);
                 });
                 
-                chai.expect(initialFiles.length).to.equal(5);
+                chai.expect(initialFiles.length).to.equal(20);
 
                 done();
             });
