@@ -127,10 +127,11 @@ class FilesController {
 
     const perPage = 20;
     const skipAmount = page * perPage;
+    // console.log(req.query);
 
     try {
       // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
-      const query = { userId: new ObjectId(userId), parentId: parentId === '0' ? 0 : new ObjectId(parentId) };
+      const query = { userId: new ObjectId(userId), parentId };
 
       const files = await dbClient.db.collection('files')
         .find(query)
@@ -148,6 +149,7 @@ class FilesController {
         parentId: file.parentId.toString(),
       }));
 
+      // console.log(response);
       return res.json(response);
     } catch (error) {
       console.error('Error in getIndex:', error);
