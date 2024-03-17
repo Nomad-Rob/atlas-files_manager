@@ -127,8 +127,7 @@ class FilesController {
     let parentId;
     if (!req.query.parentId) {
       parentId = '0';
-    }
-    else {
+    } else {
       parentId = req.query.parentId;
     }
     console.log(parentId);
@@ -140,10 +139,9 @@ class FilesController {
     try {
       // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
       let query;
-      if (parentId == '0'){
+      if (parentId === '0') {
         query = { userId: new ObjectId(userId), parentId };
-      }
-      else {
+      } else {
         query = { userId: new ObjectId(userId), parentId: new ObjectId(parentId) };
       }
 
