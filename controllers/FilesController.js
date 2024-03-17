@@ -3,10 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types'; // Added to handle MIME types
+// import Queue from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import Queue from 'bull';
-
 
 class FilesController {
   static async postUpload(req, res) {
@@ -266,6 +265,8 @@ class FilesController {
       console.error('Error serving file content:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
+
+    return res.status(500).json({ error: 'Internal Server Error: End of getFile() no result' });
   }
 }
 export default FilesController;
