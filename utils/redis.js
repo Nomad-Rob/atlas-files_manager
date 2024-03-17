@@ -9,7 +9,7 @@ class RedisClient {
     // this.connected = false;
 
     this.client.on('error', (error) => { console.error(`Redis client not connected: ${error}`); });
-    this.client.on('connect', () => {
+    this.client.on('ready', () => {
       // this.connected = true;
       resolve();
     });
@@ -18,10 +18,7 @@ class RedisClient {
   // Check if the connection is alive
   isAlive() {
     // console.log("The client is connected, true or false?:", this.client.connected);
-    if (!this.client.connected) {
-      return false;
-    }
-    return true;
+    return this.client.connected;
   }
 
   // Get value from key
