@@ -3,10 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types'; // Added to handle MIME types
+import Queue from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import Queue from 'bull';
 
+// Initialize Bull queue
+const fileQueue = new Queue('file processing');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -66,6 +68,14 @@ class FilesController {
       fs.writeFileSync(filePath, fileBuffer);
 
       fileData.localPath = filePath;
+
+      // Add job to Bull queue for generating thumbnail
+      if (type === 'image') {
+        fileQueue.add({
+          userId: new ObjectId(userId),
+          fileId: new ObjectId(),
+        });
+      }
     }
 
     const newFile = await dbClient.db.collection('files').insertOne(fileData);
@@ -124,14 +134,27 @@ class FilesController {
 
     // Convert page query param to integer with a default of 0 if undefined
     const page = parseInt(req.query.page || '0', 10);
-    const parentId = req.query.parentId || '0'; // Changed to 'const' as it is not reassigned
+    console.log(req.query);
+    let parentId;
+    if (!req.query.parentId) {
+      parentId = '0';
+    } else {
+      parentId = req.query.parentId;
+    }
+    console.log(parentId);
 
     const perPage = 20;
     const skipAmount = page * perPage;
+    // console.log(req.query);
 
     try {
       // Adjust query to correctly handle '0' parentId and apply correct ObjectId casting
-      const query = { userId: new ObjectId(userId), parentId: parentId === '0' ? 0 : new ObjectId(parentId) };
+      let query;
+      if (parentId === '0') {
+        query = { userId: new ObjectId(userId), parentId };
+      } else {
+        query = { userId: new ObjectId(userId), parentId: new ObjectId(parentId) };
+      }
 
       const files = await dbClient.db.collection('files')
         .find(query)
@@ -149,6 +172,7 @@ class FilesController {
         parentId: file.parentId.toString(),
       }));
 
+      // console.log(response);
       return res.json(response);
     } catch (error) {
       console.error('Error in getIndex:', error);
@@ -253,15 +277,30 @@ class FilesController {
         return res.status(400).json({ error: "A folder doesn't have content" });
       }
 
-      // Check if the file is locally present
-      if (!fs.existsSync(file.localPath)) {
+      // Get MIME type
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+
+      // Check for size query parameter
+      const { size } = req.query;
+      if (size && !['500', '250', '100'].includes(size)) {
+        return res.status(400).json({ error: 'Invalid size parameter. Must be one of: 500, 250, 100' });
+      }
+
+      // Get the correct local file based on size
+      let localFilePath = file.localPath;
+      if (size) {
+        localFilePath = file.localPath.replace(/\.[^/.]+$/, `_${size}$&`);
+      }
+
+      // If the local file doesn’t exist, return an error Not found with a status code 404
+      if (!fs.existsSync(localFilePath)) {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      // Get MIME type and serve file content
-      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      // Serve file content
       res.type(mimeType);
-      fs.createReadStream(file.localPath).pipe(res);
+      fs.createReadStream(localFilePath).pipe(res);
+      return res;
     } catch (error) {
       console.error('Error serving file content:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
