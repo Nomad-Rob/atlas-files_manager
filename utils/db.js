@@ -35,7 +35,7 @@ class DBClient {
     if (this.db) {
       return this.db.collection('users').countDocuments();
     }
-    throw new Error("DB is not initialized.");
+    throw new Error('DB is not initialized.');
   }
 
   // Get the number of files
@@ -43,7 +43,7 @@ class DBClient {
     if (this.db) {
       return this.db.collection('files').countDocuments();
     }
-    throw new Error("DB is not initialized.");
+    throw new Error('DB is not initialized.');
   }
 
   // Find the user and return it
@@ -53,7 +53,7 @@ class DBClient {
       return user;
     } catch (error) {
       console.error('Error finding user:', error);
-      throw new Error("Failed to find user in database.");
+      throw new Error('Failed to find user in database.');
     }
   }
 }
