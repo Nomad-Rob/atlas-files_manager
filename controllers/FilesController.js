@@ -261,12 +261,11 @@ class FilesController {
       const mimeType = mime.lookup(file.name) || 'application/octet-stream';
       res.type(mimeType);
       fs.createReadStream(file.localPath).pipe(res);
+      return res;
     } catch (error) {
       console.error('Error serving file content:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-
-    // return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 export default FilesController;
