@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongodb';
+import fs from 'fs';
 import { imageThumbnail } from 'image-thumbnail';
 import Queue from 'bull';
 import dbClient from './utils/db';
@@ -11,7 +13,7 @@ fileQueue.process(async (job) => {
   if (!job.data.fileId) {
     throw new Error('Missing fileId');
   }
-  
+
   // If userId is not present in the job, raise an error Missing userId
   if (!job.data.userId) {
     throw new Error('Missing userId');

@@ -6,7 +6,6 @@ import mime from 'mime-types'; // Added to handle MIME types
 import Queue from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import { imageThumbnail } from 'image-thumbnail';
 
 // Initialize Bull queue
 const fileQueue = new Queue('file processing');
@@ -73,7 +72,7 @@ class FilesController {
       // Add job to Bull queue for generating thumbnail
       if (type === 'image') {
         fileQueue.add({
-          userId: userId,
+          userId: new ObjectId(userId),
           fileId: new ObjectId(),
         });
       }
