@@ -1,46 +1,50 @@
-import { ObjectId } from 'mongodb';
-import fs from 'fs';
-import { imageThumbnail } from 'image-thumbnail';
 import Queue from 'bull';
+import { ObjectId } from 'mongodb';
+import { writeFileSync } from 'fs';
 import dbClient from './utils/db';
 
-// Create a Bull queue fileQueue
+const imageThumbnail = require('image-thumbnail');
+
 const fileQueue = new Queue('file processing');
+const userQueue = new Queue('userQ');
 
-// Process this queue
+// Function creates a thumbnail based on passed in file and width
+const createThumb = async (path, options) => {
+  try {
+    const thumbnail = await imageThumbnail(path, options);
+    const thumbPath = `${path}_${options.width}`;
+    // console.log('Thumbnail path is:', thumbPath);
+    writeFileSync(thumbPath, thumbnail);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// Calls on createThumb to create 3 files of different
+// image widths
 fileQueue.process(async (job) => {
-  // If fileId is not present in the job, raise an error Missing fileId
-  if (!job.data.fileId) {
-    throw new Error('Missing fileId');
-  }
+  const { fileId, userId } = job.data;
+  if (!fileId) throw new Error('Missing fileId');
+  if (!userId) throw new Error('Missing userId');
 
-  // If userId is not present in the job, raise an error Missing userId
-  if (!job.data.userId) {
-    throw new Error('Missing userId');
-  }
-
-  // If no document is found in DB based on the fileId and userId, raise an error File not found
   const file = await dbClient.db.collection('files').findOne({
     _id: new ObjectId(job.data.fileId),
     userId: new ObjectId(job.data.userId),
   });
-  if (!file) {
-    throw new Error('File not found');
-  }
+  if (!file) throw new Error('File not found');
 
-  // Generate thumbnails with width = 500, 250 and 100
-  const thumbnail500 = await imageThumbnail(file.localPath, { width: 500 });
-  const thumbnail250 = await imageThumbnail(file.localPath, { width: 250 });
-  const thumbnail100 = await imageThumbnail(file.localPath, { width: 100 });
+  createThumb(file.localPath, { width: 500 });
+  createThumb(file.localPath, { width: 250 });
+  createThumb(file.localPath, { width: 100 });
+  console.log('Thumbnail processing complete');
+});
 
-  // Store each result on the same location of the original file by appending _<width size>
-  const path500 = file.localPath.replace(/\.[^/.]+$/, '_500$&');
-  const path250 = file.localPath.replace(/\.[^/.]+$/, '_250$&');
-  const path100 = file.localPath.replace(/\.[^/.]+$/, '_100$&');
+userQueue.process(async (job) => {
+  const { userId } = job.data;
+  if (!userId) throw new Error('Missing userId');
 
-  await Promise.all([
-    fs.promises.writeFile(path500, thumbnail500),
-    fs.promises.writeFile(path250, thumbnail250),
-    fs.promises.writeFile(path100, thumbnail100),
-  ]);
+  const user = dbClient.users.findOne({ _id: ObjectId(userId) });
+  if (!user) throw new Error('User not found');
+
+  console.log(`Welcome ${user.email}`);
 });

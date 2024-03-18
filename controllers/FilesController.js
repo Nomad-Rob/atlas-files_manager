@@ -68,19 +68,20 @@ class FilesController {
       fs.writeFileSync(filePath, fileBuffer);
 
       fileData.localPath = filePath;
-
-      // Add job to Bull queue for generating thumbnail
-      if (type === 'image') {
-        fileQueue.add({
-          userId: new ObjectId(userId),
-          fileId: new ObjectId(),
-        });
-      }
     }
 
     const newFile = await dbClient.db.collection('files').insertOne(fileData);
 
-    console.log('newFile is:', newFile);
+    // Add job to Bull queue for generating thumbnail
+    if (fileData.type === 'image') {
+      console.log('Type of file is an image');
+      fileQueue.add({
+        userId: new ObjectId(userId),
+        fileId: new ObjectId(newFile.insertedId),
+      });
+    }
+
+    // console.log('newFile is:', newFile);
     return res.status(201).json({
       id: newFile.insertedId,
       userId: fileData.userId,
@@ -282,15 +283,15 @@ class FilesController {
 
       // Check for size query parameter
       const { size } = req.query;
+      console.log('Size is:', size);
       if (size && !['500', '250', '100'].includes(size)) {
+        console.log('Invalid size parameter! Must be 100, 250, or 500');
         return res.status(400).json({ error: 'Invalid size parameter. Must be one of: 500, 250, 100' });
       }
 
       // Get the correct local file based on size
-      let localFilePath = file.localPath;
-      if (size) {
-        localFilePath = file.localPath.replace(/\.[^/.]+$/, `_${size}$&`);
-      }
+      const localFilePath = size === 0 ? file.localPath : `${file.localPath}_${size}`;
+      console.log('Local file path is:', localFilePath);
 
       // If the local file doesn’t exist, return an error Not found with a status code 404
       if (!fs.existsSync(localFilePath)) {
