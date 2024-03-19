@@ -1,58 +1,89 @@
 # Files Manager
 
-## Description
+## Overview
 
-This project is a comprehensive back-end application designed to illustrate the assembly of various technologies and concepts including authentication, NodeJS, MongoDB, Redis, pagination, and background processing. The primary goal is to build a simple platform to upload and view files, featuring user authentication via tokens, file uploads, permissions management, thumbnail generation, and more.
+This back-end project encapsulates the essence of modern web development. It is designed to be a cumulative experience, highlighting key back-end technologies such as NodeJS, MongoDB, Redis, and the implementation of pagination and background processing tasks. The platform facilitates file management operations, including uploading, viewing, and managing file permissions, augmented with user authentication and thumbnail generation for images.
 
-## Features
+### Team Members
+- Rob Farley
+- Shadi Shwiyat
 
-- User authentication via a token
-- Listing all files
-- Uploading new files
-- Changing file permissions
-- Viewing files
-- Generating thumbnails for images
+### Project Goals
+The objective of this project is to create a robust file management system that supports:
+- User authentication using token-based access.
+- The ability to list, upload, and manage files.
+- Permission modification for files.
+- Viewing files and generating thumbnails for image files.
 
-## Technologies
+## Technical Stack and Resources
+This project leverages a MERN stack (MongoDB, Express.js, React, Node.js) complemented by Redis for session management and temporary data storage, Bull for background job processing, and several other utilities for file handling and thumbnail generation.
 
-- Node.js
-- Express
-- MongoDB
-- Redis
-- Bull (for background jobs)
-- Mocha (for testing)
+- [Express Documentation](https://expressjs.com/en/starter/installing.html)
+- [MongoDB Documentation](https://www.mongodb.com/docs/)
+- [Redis Official Website](https://redis.io/documentation)
+- [Node.js Documentation](https://nodejs.org/en/docs/)
+- [Bull - Premium Queue package for handling distributed jobs](https://optimalbits.github.io/bull/)
 
-## Getting Started
+## Installation and Running the Project
 
-### Prerequisites
+1. **Clone the Repository**
+    ```sh
+    git clone [repository-link]
+    cd atlas-files_manager
+    ```
 
-- Node.js (version 12.x.x)
-- MongoDB
-- Redis
+2. **Install Dependencies**
+    Navigate to the project directory and install the necessary dependencies.
+    ```sh
+    npm install
+    ```
 
-### Installation
+3. **Environment Variables**
+    Set up the required environment variables for MongoDB, Redis, and the application port.
+    - Create a `.env` file in the project root.
+    - Add the following configurations:
+      ```env
+      DB_HOST=localhost
+      DB_PORT=27017
+      DB_DATABASE=files_manager
+      REDIS_HOST=localhost
+      REDIS_PORT=6379
+      PORT=5000
+      FOLDER_PATH=/path/to/your/folder
+      ```
 
-1. Clone the repository:
+4. **Start the Server**
+    ```sh
+    npm run start-server
+    ```
 
-git clone https://github.com/YOUR_GITHUB/atlas-files_manager.git
+5. **Run the Worker (Optional)**
+    For background processing (e.g., thumbnail generation), start the worker in a separate terminal.
+    ```sh
+    npm run start-worker
+    ```
 
-2. Navigate to the project directory:
+## API Endpoints Overview
 
-cd atlas-files_manager
+The Files Manager API provides various endpoints for managing files and user sessions:
 
-3. Install the dependencies:
+- `POST /users` - Register a new user.
+- `GET /connect` - User login generating a unique session token.
+- `GET /disconnect` - User logout that invalidates the session token.
+- `POST /files` - Upload a file.
+- `GET /files` - List all files for the authenticated user.
+- More detailed documentation on each endpoint is available in the project's API specification document.
 
-npm install
 
-4. Set the environment variables:
+### User Registration
 
-PORT=5000
-DB_HOST=localhost
-DB_PORT=27017
-DB_DATABASE=files_manager
-REDIS_HOST=localhost
-REDIS_PORT=6379
-FOLDER_PATH=/path/to/your/storage
+```sh
+curl -X POST http://localhost:5000/users -H 'Content-Type: application/json' -d '{"email": "user@example.com", "password": "password123"}'
+File Upload
+sh
+Copy code
+curl -X POST http://localhost:5000/files -H "X-Token: <Your-Access-Token>" -F "data=@/path
+```
 
 ## Some checks we are failing
 
